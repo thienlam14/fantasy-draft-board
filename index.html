@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Draft Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#11151c;
+    --panel:#191f29;
+    --panel2:#1f2733;
+    --line:#2b3444;
+    --ink:#e9e6dd;
+    --ink-dim:#9aa3b2;
+    --gold:#e3b23c;
+    --teal:#4fb3a3;
+    --red:#c1544a;
+    --court:#2f6f5e;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Barlow',sans-serif;
+    padding:28px 18px 60px;
+  }
+  h1,h2,h3,.num{font-family:'Barlow Condensed',sans-serif;}
+  .wrap{max-width:1000px;margin:0 auto;}
+  header{margin-bottom:22px;border-bottom:1px solid var(--line);padding-bottom:18px;}
+  header .kicker{color:var(--gold);font-size:13px;letter-spacing:.02em;font-weight:600;}
+  h1{font-size:34px;font-weight:700;margin:4px 0 8px;line-height:1.05;}
+  header p{color:var(--ink-dim);font-size:15px;max-width:640px;line-height:1.5;margin:0;}
+
+  .insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0 26px;}
+  .insight{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px;}
+  .insight .n{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--gold);line-height:1;}
+  .insight .l{color:var(--ink-dim);font-size:12.5px;margin-top:4px;}
+
+  section{margin-bottom:34px;}
+  .sec-title{display:flex;align-items:baseline;gap:10px;margin-bottom:12px;}
+  .sec-title h2{font-size:22px;font-weight:600;margin:0;}
+  .sec-title span{color:var(--ink-dim);font-size:13px;}
+
+  .slots{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+  .slot-btn{
+    background:var(--panel);border:1px solid var(--line);color:var(--ink-dim);
+    font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:16px;
+    width:42px;height:42px;border-radius:6px;cursor:pointer;transition:.15s;
+  }
+  .slot-btn:hover{border-color:var(--gold);color:var(--ink);}
+  .slot-btn.active{background:var(--gold);color:#191308;border-color:var(--gold);}
+
+  .pickline{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px 18px;margin-bottom:14px;}
+  .pickline .row{display:flex;flex-wrap:wrap;gap:8px;}
+  .pchip{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:6px 10px;font-size:13px;color:var(--ink-dim);}
+  .pchip b{color:var(--ink);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;}
+  .turn-note{color:var(--ink-dim);font-size:13px;margin-top:10px;line-height:1.5;}
+  .turn-note b{color:var(--teal);}
+
+  table{width:100%;border-collapse:collapse;font-size:14px;}
+  thead th{
+    text-align:left;color:var(--ink-dim);font-weight:600;font-size:11.5px;
+    text-transform:uppercase;letter-spacing:.03em;padding:8px 10px;border-bottom:1px solid var(--line);
+    cursor:pointer;user-select:none;
+  }
+  thead th:hover{color:var(--gold);}
+  tbody td{padding:8px 10px;border-bottom:1px solid var(--line);}
+  tbody tr:hover{background:var(--panel2);}
+  .rk{color:var(--ink-dim);font-family:'Barlow Condensed',sans-serif;font-size:15px;}
+  .pname{font-weight:600;}
+  .pteam{color:var(--ink-dim);font-size:12px;}
+  .pos-badge{
+    display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border-radius:3px;
+    background:var(--panel2);border:1px solid var(--line);color:var(--ink-dim);
+  }
+  .fp{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;color:var(--gold);}
+  .tier-S{color:#e3b23c;}
+  .tier-A{color:#8fc7b8;}
+  .tier-B{color:#9aa3b2;}
+  .tier-C{color:#7a8291;}
+  .trend-up{color:var(--teal);font-size:11px;cursor:help;}
+  .trend-down{color:var(--red);font-size:11px;cursor:help;}
+
+  .moves-list{display:flex;flex-direction:column;gap:8px;}
+  .move-row{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--line);border-radius:5px;padding:10px 14px;font-size:13.5px;line-height:1.5;}
+  .move-row.up{border-left-color:var(--teal);}
+  .move-row.down{border-left-color:var(--red);}
+  .move-row.watch{border-left-color:var(--gold);}
+  .move-row .who{font-weight:600;color:var(--ink);}
+  .move-row .tag{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:.03em;font-weight:600;padding:1px 7px;border-radius:3px;margin-right:8px;}
+  .move-row.up .tag{background:rgba(79,179,163,.15);color:var(--teal);}
+  .move-row.down .tag{background:rgba(193,84,74,.15);color:var(--red);}
+  .move-row.watch .tag{background:rgba(227,178,60,.15);color:var(--gold);}
+  .move-row .body{color:var(--ink-dim);}
+
+  .pool-grid{display:grid;grid-template-columns:1fr;gap:10px;}
+  .pool-card{background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden;}
+  .pool-head{display:flex;align-items:center;gap:10px;padding:9px 14px;}
+  .pool-head .swatch{width:11px;height:11px;border-radius:3px;flex:none;}
+  .pool-head .rname{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;}
+  .pool-head .rrange{color:var(--ink-dim);font-size:12px;margin-left:auto;}
+  .pool-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 12px;}
+  .pchip2{
+    font-size:12.5px;padding:4px 9px;border-radius:4px;background:var(--panel2);
+    border:1px solid var(--line);border-left-width:3px;color:var(--ink);
+  }
+  .pchip2 .pos{color:var(--ink-dim);font-size:11px;margin-left:3px;}
+  .rd-badge{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:22px;height:22px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;font-size:12px;color:#12151c;
+  }
+  .risk-dot{
+    display:inline-block;width:9px;height:9px;border-radius:50%;cursor:help;flex:none;
+  }
+  .risk-high{background:var(--red);}
+  .risk-moderate{background:var(--gold);}
+  .risk-legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;color:var(--ink-dim);font-size:12.5px;margin-bottom:14px;}
+  .risk-legend span{display:inline-flex;align-items:center;gap:6px;}
+  .cons-icon{font-size:12px;cursor:help;display:inline-block;}
+  .cons-steady{color:var(--teal);}
+  .cons-steady-elite{color:#6fd6c4;text-shadow:0 0 6px rgba(111,214,196,.55);}
+  .cons-boom{color:var(--gold);}
+
+  .traj-chip{
+    font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.02em;
+    padding:2px 7px;border-radius:3px;white-space:nowrap;cursor:help;
+  }
+  .traj-rising{background:rgba(79,179,163,.15);color:var(--teal);}
+  .traj-declining{background:rgba(193,84,74,.15);color:var(--red);}
+  .status-tag{
+    font-family:'Barlow Condensed',sans-serif;font-size:10.5px;font-weight:700;
+    padding:1px 6px;border-radius:3px;cursor:help;letter-spacing:.02em;
+  }
+  .status-gtd{background:rgba(227,178,60,.18);color:var(--gold);}
+  .status-inj{background:rgba(193,84,74,.18);color:var(--red);}
+
+  .roster-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap;}
+  .reset-btn{background:transparent;border:1px solid var(--line);color:var(--ink-dim);font-family:'Barlow',sans-serif;font-size:12.5px;padding:6px 12px;border-radius:5px;cursor:pointer;}
+  .reset-btn:hover{border-color:var(--red);color:var(--red);}
+  .roster-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;}
+  .roster-slot{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 10px;min-height:52px;}
+  .roster-slot .stype{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--gold);}
+  .roster-slot .sname{font-size:13.5px;margin-top:2px;color:var(--ink);}
+  .roster-slot.empty{border-style:dashed;}
+  .roster-slot.empty .sname{color:var(--ink-dim);font-style:italic;}
+  .roster-slot .sundo{float:right;color:var(--ink-dim);cursor:pointer;font-size:11px;}
+  .roster-slot .sundo:hover{color:var(--red);}
+
+  .pick-actions{display:flex;gap:6px;}
+  .pick-btn{
+    font-family:'Barlow',sans-serif;font-size:11.5px;padding:4px 9px;border-radius:4px;
+    border:1px solid var(--line);background:var(--panel2);color:var(--ink-dim);cursor:pointer;white-space:nowrap;
+  }
+  .pick-btn:hover{color:var(--ink);border-color:var(--gold);}
+  .pick-btn.mine-btn:hover{border-color:var(--teal);color:var(--teal);}
+  .pick-btn.opp-btn:hover{border-color:var(--red);color:var(--red);}
+  .status-chip{
+    font-family:'Barlow Condensed',sans-serif;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:4px;
+    display:inline-flex;align-items:center;gap:6px;cursor:pointer;
+  }
+  .status-mine{background:rgba(79,179,163,.18);color:var(--teal);}
+  .status-taken{background:rgba(122,130,145,.18);color:var(--ink-dim);}
+  tr.row-taken{opacity:.35;}
+  tr.row-mine{background:rgba(79,179,163,.06);}
+  tr.row-taken .pname, tr.row-mine .pname{text-decoration:line-through;color:var(--ink-dim);}
+  .pchip2.chip-taken{opacity:.3;text-decoration:line-through;cursor:pointer;}
+  .pchip2.chip-mine{outline:1px solid var(--teal);text-decoration:line-through;cursor:pointer;}
+  .pchip2{cursor:pointer;}
+
+  .controls{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .controls input, .controls select{
+    background:var(--panel);border:1px solid var(--line);color:var(--ink);
+    padding:8px 10px;border-radius:5px;font-family:'Barlow',sans-serif;font-size:14px;
+  }
+  .controls input{flex:1;min-width:160px;}
+
+  .board-scroll{max-height:560px;overflow-y:auto;border:1px solid var(--line);border-radius:6px;}
+  .board-scroll table{font-size:13.5px;}
+  .board-scroll thead{position:sticky;top:0;background:var(--panel);z-index:2;}
+
+  footer{color:var(--ink-dim);font-size:12.5px;border-top:1px solid var(--line);padding-top:16px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">FANTASY NBA &middot; 8 TEAM SNAKE &middot; <span id="seasonLabel">CURRENT SEASON STATS</span></div>
+  <h1>Your custom-scoring draft board</h1>
+  <p>Built from current-season per-game NBA stats, run through your league's exact scoring rules. Pick your draft slot below to see your picks across all 14 rounds, or scan the full board.</p>
+  <p id="lastUpdated" style="color:var(--ink-dim);font-size:12px;margin-top:6px;"></p>
+</header>
+
+<div class="insight-grid">
+  <div class="insight"><div class="n">4.0 / 3.5</div><div class="l">pts per steal / block &mdash; nearly double most leagues. Defense is a first&ndash;round skill here.</div></div>
+  <div class="insight"><div class="n">&minus;0.85</div><div class="l">per shot attempt. High-volume, low-efficiency scorers lose real value &mdash; chase true shooting, not usage.</div></div>
+  <div class="insight"><div class="n">&minus;1.5</div><div class="l">per turnover, on top of the shot-attempt penalty. Careful ball-handlers (bigs included) climb the board.</div></div>
+</div>
+
+<section>
+  <div class="sec-title"><h2>2026 offseason, priced in</h2><span>ranks/values above already reflect these</span></div>
+  <div class="moves-list">
+    <div class="move-row up"><span class="tag">RISER</span><span class="who">Luka Dončić (LAL)</span> <span class="body">&mdash; LeBron signed with Philly, so Luka is now the unquestioned #1 option, with Austin Reaves right behind him. Walker Kessler (sign-and-trade from Utah) starts at center, a strong fit as a rim-running shot-blocker in a defense-heavy format.</span></div>
+    <div class="move-row up"><span class="tag">RISER</span><span class="who">Jalen Johnson &amp; Dyson Daniels (ATL)</span> <span class="body">&mdash; Atlanta shipped Trae Young to Washington for CJ McCollum and Corey Kispert. Johnson inherits full-time point-forward duties; both he and Daniels should see more usage.</span></div>
+    <div class="move-row up"><span class="tag">RISER</span><span class="who">Tyler Herro &amp; Deandre Ayton</span> <span class="body">&mdash; Herro was flipped to Milwaukee in the Giannis deal and becomes the Bucks' clear #1 scorer. Ayton was dealt from the Lakers to Washington into a wide-open starting role.</span></div>
+    <div class="move-row up"><span class="tag">RISER</span><span class="who">Paul George (BOS)</span> <span class="body">&mdash; Sent to Boston as the centerpiece return for Jaylen Brown; much less competition for shots next to Tatum, though durability (36 years old, injury history) is the real question mark, not talent.</span></div>
+    <div class="move-row down"><span class="tag">RISK</span><span class="who">Tyrese Maxey, Joel Embiid &amp; VJ Edgecombe (PHI)</span> <span class="body">&mdash; Philadelphia added both LeBron James (free agency) and Jaylen Brown (trade) this summer. Four ball-dominant scorers on one roster means diluted usage for everyone not named Embiid&#8203;/&#8203;Maxey&#8203;/&#8203;Brown&#8203;/&#8203;LeBron &mdash; and even those four will eat into each other.</span></div>
+    <div class="move-row down"><span class="tag">RISK</span><span class="who">Giannis Antetokounmpo (MIA)</span> <span class="body">&mdash; Traded to Miami to pair with Bam Adebayo. Still an elite fantasy piece, but expect a small dip in rebounds/paint touches sharing the frontcourt.</span></div>
+    <div class="move-row down"><span class="tag">RISK</span><span class="who">LaMelo Ball &amp; Deni Avdija</span> <span class="body">&mdash; LaMelo moves from Charlotte to a good Minnesota team and will share the ball with Anthony Edwards (better efficiency, likely lower raw counting stats). Avdija's Portland now has Ja Morant (via trade from Memphis), which competes directly with his playmaking role.</span></div>
+    <div class="move-row watch"><span class="tag">WATCH</span><span class="who">Kawhi Leonard (LAC)</span> <span class="body">&mdash; A trade to Toronto was reportedly agreed, then put on hold pending a league investigation into an undisclosed Clippers sponsorship. Treat him as a Clipper for draft day, but keep an eye on the news &mdash; his situation could change fast.</span></div>
+    <div class="move-row watch"><span class="tag">WATCH</span><span class="who">Domantas Sabonis (SAC)</span> <span class="body">&mdash; Still on the Kings as of early September, but persistent trade rumors and a meniscus injury that limited him to 19 games last year make him a boom-or-bust value pick rather than a safe one.</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-title"><h2>Injury risk, priced in</h2><span>marked players are pushed down the board, not just flagged</span></div>
+  <p style="color:var(--ink-dim);font-size:13.5px;margin:-4px 0 14px;line-height:1.5;max-width:680px;">
+    Anyone with a real durability question &mdash; chronic issues, a major injury last season, or a recent games-played collapse &mdash; gets a colored dot next to their name and a lower spot in the rankings/round pools below, on top of their raw performance score. Hover a dot anywhere on the board for the specific reason. This isn't a medical prediction, just a nudge: talent still matters, but so does whether they're on the floor.
+  </p>
+  <div class="risk-legend">
+    <span><span class="risk-dot risk-high"></span> High risk &mdash; chronic / played &lt;45 games last year, pushed down ~20%</span>
+    <span><span class="risk-dot risk-moderate"></span> Moderate risk &mdash; real history or a partial-season flag, pushed down ~8%</span>
+  </div>
+</section>
+
+<section>
+  <div class="sec-title"><h2>Floor vs. ceiling</h2><span>consistent scorers vs. streaky, high-upside ones</span></div>
+  <p style="color:var(--ink-dim);font-size:13.5px;margin:-4px 0 14px;line-height:1.5;max-width:680px;">
+    Two players can carry the same average and still feel completely different on your bench. A <span class="cons-icon cons-steady">&#9646;&#9646;&#9646;</span> <b style="color:var(--ink)">steady</b> tag means the production shows up almost every night &mdash; usually a stable, high-touch role or a game built on defense/rebounding rather than makes-dependent scoring. A <span class="cons-icon cons-steady-elite">&#9646;&#9646;&#9646;</span> <b style="color:var(--ink)">steady, 50+ FP/gm</b> tag is the same reliability but at a true stud scoring level &mdash; these are the safest high-value picks on the whole board. A <span class="cons-icon cons-boom">&#9889;</span> <b style="color:var(--ink)">boom-bust</b> tag means real week-to-week swings &mdash; often a 3-point-heavy shot diet, a matchup-dependent role, or injury/minutes variance &mdash; paired with a higher ceiling on the good nights. This is a qualitative read on shot profile and role, not a variance calculation from game logs, so use it to decide who you can count on for a stable week vs. who you're rostering for spike weeks.
+  </p>
+</section>
+
+<section>
+  <div class="sec-title"><h2>5-year trajectory</h2><span>rewarding players still climbing, discounting ones on the back nine</span></div>
+  <p style="color:var(--ink-dim);font-size:13.5px;margin:-4px 0 14px;line-height:1.5;max-width:680px;">
+    Beyond last season's numbers, everything on this board also reflects where a player has been trending over roughly the last five years. A <span class="traj-chip traj-rising">RISING</span> tag (young player still adding to their game year over year) gets a modest boost to where they land; a <span class="traj-chip traj-declining">DECLINING</span> tag (falling games played, fading efficiency, or a clear age/health cliff over multiple seasons) gets pulled down, stacking on top of the injury-risk discount where both apply. No tag just means "still performing at a stable level" &mdash; not every established star is trending anywhere in particular, and that's fine. This is a basketball-knowledge judgment call, not a regression on five years of game logs, so treat it the same way as the other tags: a nudge, not a verdict.
+  </p>
+</section>
+
+<section>
+  <div class="sec-title"><h2>Round-by-round pools</h2><span>your ~8-player shortlist for each round, color-coded</span></div>
+  <p style="color:var(--ink-dim);font-size:13.5px;margin:-4px 0 14px;line-height:1.5;max-width:680px;">
+    Each pool is the 8 players ranked for roughly that round of an 8-team snake draft (rank 1&ndash;8 = round 1, 9&ndash;16 = round 2, and so on). Don't draft strictly in rank order &mdash; use the pool as your shortlist for that round and grab whichever of the ~8 best fills a need or fits your roster, since several of them realistically fall to the same pick.
+  </p>
+  <div class="pool-grid" id="poolgrid"></div>
+</section>
+
+<section>
+  <div class="sec-title"><h2>Pick sequence by draft slot</h2><span>choose where you'll be drafting from</span></div>
+  <p style="color:var(--ink-dim);font-size:12.5px;margin:-6px 0 12px;">Suggestions update live as players get marked "Mine" or "Taken" below &mdash; each pick shows the best player still actually available at that point, not just a fixed rank.</p>
+  <div class="slots" id="slots"></div>
+  <div class="pickline">
+    <div class="row" id="pickchips"></div>
+    <div class="turn-note" id="turnnote"></div>
+  </div>
+</section>
+
+<section>
+  <div class="roster-bar">
+    <div class="sec-title" style="margin-bottom:0;"><h2>My roster</h2><span>click a player anywhere below to draft them</span></div>
+    <button class="reset-btn" id="resetDraft">Reset draft</button>
+  </div>
+  <p style="color:var(--ink-dim);font-size:12.5px;margin:-6px 0 12px;">Built for PG / SG / SF / PF / F / 3 FLEX / 6 bench (14 total) &mdash; tell me if your league's bench count is different and I'll adjust it.</p>
+  <div class="roster-grid" id="rostergrid"></div>
+</section>
+
+<section>
+  <div class="sec-title"><h2>Full board</h2><span id="boardcount"></span></div>
+  <div class="controls">
+    <input id="search" type="text" placeholder="Search a player...">
+    <select id="posfilter">
+      <option value="ALL">All positions</option>
+      <option value="PG">PG</option>
+      <option value="SG">SG</option>
+      <option value="SF">SF</option>
+      <option value="PF">PF</option>
+      <option value="C">C</option>
+    </select>
+    <select id="roundfilter">
+      <option value="ALL">All rounds</option>
+    </select>
+    <select id="consfilter">
+      <option value="ALL">Floor/ceiling: all</option>
+      <option value="steady_elite">Steady 50+ only</option>
+      <option value="steady">Steady only</option>
+      <option value="boom">Boom-bust only</option>
+    </select>
+    <select id="trajfilter">
+      <option value="ALL">5yr trend: all</option>
+      <option value="rising">Rising only</option>
+      <option value="declining">Declining only</option>
+    </select>
+  </div>
+  <div class="board-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:34px">#</th>
+          <th style="width:40px">Rd</th>
+          <th style="width:26px"></th>
+          <th style="width:22px"></th>
+          <th>Player</th>
+          <th style="width:36px"></th>
+          <th style="width:78px">5yr</th>
+          <th style="width:50px">Pos</th>
+          <th style="width:118px">Draft</th>
+          <th style="width:70px">FP/gm</th>
+          <th style="width:50px">PTS</th>
+          <th style="width:50px">REB</th>
+          <th style="width:50px">AST</th>
+          <th style="width:44px">STL</th>
+          <th style="width:44px">BLK</th>
+          <th style="width:44px">TOV</th>
+        </tr>
+      </thead>
+      <tbody id="board"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  Position eligibility (shown as multi-position badges, e.g. "PG/SG") is pulled directly from your Sleeper league rather than estimated, along with a few team corrections it revealed (Kawhi Leonard to Toronto, LeBron James to Philadelphia, Anthony Davis to Washington, DeMar DeRozan to Denver, Brandon Ingram to the Clippers, and others) that weren't reflected in earlier reporting. Roster slotting checks all of a player's eligible positions, not just one. FP/gm computed as: PTS + REB + 2&times;AST + 4&times;STL + 3.5&times;BLK &minus; 1.5&times;TOV + 2&times;FGM &minus; 0.85&times;FGA + 2&times;FTM &minus; FTA + 3PM + DD (1pt) + TD (2pt), using each player's actual 2025&ndash;26 season per-game averages and their real double-double/triple-double rates for the season. Players affected by a confirmed 2026 trade or free-agent move (&#9650; / &#9660; in the FP column &mdash; hover for why) have a hand-adjusted projection layered on top. The rank/round/tier also applies an injury-risk discount (colored dot) and a 5-year trajectory adjustment (RISING/DECLINING chip). The floor/ceiling icon now uses real 2025-26 volatility rates (% of games that landed outside &plusmn;25% of a player's own average, via LineupExperts) wherever available &mdash; hover the icon for the exact number; a small number of players without enough of a game sample keep a qualitative call instead, noted in the tooltip. A live status tag (GTD/INJ) reflects what your Sleeper screenshots showed as of Sept 14, 2026 and will go stale &mdash; always double check current status before drafting. Board covers ~78 of the most fantasy-relevant players; depth beyond this is roughly your league's free-agent pool.
+</footer>
+
+</div>
+
+<script>
+let PLAYERS = [];
+
+async function loadPlayers() {
+  const res = await fetch('./data/players.json', { cache: 'no-store' });
+  PLAYERS = await res.json();
+  // Tiers are computed by the update pipeline, but recompute defensively
+  // in case a hand-edited players.json is missing them.
+  PLAYERS.forEach(p => {
+    if (!p.tier) {
+      const fp = p.draftFP != null ? p.draftFP : p.FP;
+      p.tier = fp >= 55 ? 'S' : fp >= 45 ? 'A' : fp >= 35 ? 'B' : 'C';
+    }
+  });
+  try {
+    const metaRes = await fetch('./data/last_updated.json', { cache: 'no-store' });
+    if (metaRes.ok) {
+      const meta = await metaRes.json();
+      const d = new Date(meta.updatedAt);
+      document.getElementById('lastUpdated').textContent =
+        `Data last refreshed ${d.toLocaleDateString()} \u00b7 ${meta.count} players \u00b7 ${meta.season}-${String(meta.season+1).slice(2)} season`;
+      document.getElementById('seasonLabel').textContent = `${meta.season}-${String(meta.season+1).slice(2)} SEASON STATS`;
+    }
+  } catch (e) { /* last_updated.json optional */ }
+}
+
+// ---- Draft tracking state (declared early so all render functions can see it) ----
+const ROSTER_SLOTS = ['PG','SG','SF','PF','F','FLEX','FLEX','FLEX','BN','BN','BN','BN','BN','BN'];
+let draftState = {};   // name -> 'mine' | 'taken'
+let myPicks = [];      // ordered list of names drafted as 'mine'
+
+function availablePlayers(){
+  return PLAYERS.filter(p=>!draftState[p.name]);
+}
+
+const N_TEAMS = 8;
+const N_ROUNDS = 14;
+
+const ROUND_COLORS = [
+  '#e3b23c', // R1 gold
+  '#d99a3c', // R2 amber
+  '#d4823f', // R3 tangerine
+  '#cf6a45', // R4 burnt orange
+  '#c1544a', // R5 red
+  '#b14a68', // R6 rose
+  '#95487f', // R7 plum
+  '#75478f', // R8 violet
+  '#54508f', // R9 indigo
+  '#3f6a94', // R10 blue
+  '#3f8a94', // R11 cyan
+  '#4fb3a3', // R12 teal
+  '#5aab7d', // R13 sea green
+  '#7a8291'  // R14 slate (bench)
+];
+function roundOf(rank){ return Math.min(N_ROUNDS, Math.ceil(rank/N_TEAMS)); }
+function roundColor(rank){ return ROUND_COLORS[roundOf(rank)-1]; }
+function consIconHTML(p, extraStyle){
+  const style = extraStyle || '';
+  if(p.consistency==='steady_elite') return `<span class="cons-icon cons-steady-elite" title="${p.consistencyNote} (50+ FP/gm)" style="${style}">&#9646;&#9646;&#9646;</span>`;
+  if(p.consistency==='steady') return `<span class="cons-icon cons-steady" title="${p.consistencyNote}" style="${style}">&#9646;&#9646;&#9646;</span>`;
+  if(p.consistency==='boom') return `<span class="cons-icon cons-boom" title="${p.consistencyNote}" style="${style}">&#9889;</span>`;
+  return '';
+}
+
+function picksForSlot(slot){
+  const picks=[];
+  for(let r=1;r<=N_ROUNDS;r++){
+    const posInRound = (r%2===1) ? slot : (N_TEAMS+1-slot);
+    const overall = (r-1)*N_TEAMS + posInRound;
+    picks.push({round:r, overall});
+  }
+  return picks;
+}
+
+let currentSlot = 4;
+
+function renderSlots(){
+  const el = document.getElementById('slots');
+  el.innerHTML='';
+  for(let i=1;i<=N_TEAMS;i++){
+    const b=document.createElement('button');
+    b.className='slot-btn'+(i===currentSlot?' active':'');
+    b.textContent=i;
+    b.onclick=()=>{currentSlot=i; renderSlots(); renderPicks();};
+    el.appendChild(b);
+  }
+}
+
+function renderPicks(){
+  const picks = picksForSlot(currentSlot);
+  const avail = availablePlayers();
+  const chipsEl = document.getElementById('pickchips');
+  chipsEl.innerHTML='';
+  picks.forEach(pk=>{
+    const target = avail[pk.overall-1] || avail[avail.length-1];
+    const chip=document.createElement('div');
+    chip.className='pchip';
+    chip.style.borderLeft = '3px solid ' + ROUND_COLORS[pk.round-1];
+    chip.innerHTML = `<b>R${pk.round}</b> &middot; pick ${pk.overall} &middot; ~${target ? target.name : 'best available'}`;
+    chipsEl.appendChild(chip);
+  });
+  const note = document.getElementById('turnnote');
+  let msg;
+  if(currentSlot<=2){
+    msg = `Slot ${currentSlot}: you open with a top-tier player, then wait a long way &mdash; picks ${picks[0].overall} and ${picks[1].overall} are ${picks[1].overall-picks[0].overall} apart. Lock in a foundation stud, then be ready to reach slightly in rounds 2&ndash;3 rather than assume your guy is still there.`;
+  } else if(currentSlot>=N_TEAMS-1){
+    msg = `Slot ${currentSlot}: you get <b>back-to-back picks</b> at the turn (picks ${picks[0].overall} & ${picks[1].overall}), effectively drafting two players in a row. Use that to pair a stud with a value that fell, or double up at a scarce position like steals/blocks.`;
+  } else {
+    msg = `Slot ${currentSlot}: a balanced middle slot &mdash; decent access to runs on both sides. Your picks land at ${picks.slice(0,4).map(p=>p.overall).join(', ')}... Stay flexible in round 1 and take the best defensive-stat player left if two studs grade similarly.`;
+  }
+  note.innerHTML = msg;
+}
+
+function statusActionsHTML(p){
+  const status = draftState[p.name];
+  if(status==='mine'){
+    return `<span class="status-chip status-mine" data-action="undo" data-name="${p.name}">MINE &times;</span>`;
+  } else if(status==='taken'){
+    return `<span class="status-chip status-taken" data-action="undo" data-name="${p.name}">TAKEN &times;</span>`;
+  }
+  return `<div class="pick-actions">
+     <button class="pick-btn mine-btn" data-action="mine" data-name="${p.name}">+ Mine</button>
+     <button class="pick-btn opp-btn" data-action="taken" data-name="${p.name}">Taken</button>
+   </div>`;
+}
+
+function renderBoard(){
+  const q = document.getElementById('search').value.toLowerCase();
+  const pf = document.getElementById('posfilter').value;
+  const rf = document.getElementById('roundfilter').value;
+  const cf = document.getElementById('consfilter').value;
+  const tf = document.getElementById('trajfilter').value;
+  const rows = PLAYERS.filter((p,i)=>{
+    if(pf!=='ALL' && !(p.positions||[p.pos]).includes(pf)) return false;
+    if(rf!=='ALL' && roundOf(i+1)!==Number(rf)) return false;
+    if(cf!=='ALL' && p.consistency!==cf) return false;
+    if(tf!=='ALL' && p.trajectory!==tf) return false;
+    if(q && !p.name.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  document.getElementById('boardcount').textContent = rows.length + ' players';
+  const tbody = document.getElementById('board');
+  tbody.innerHTML='';
+  rows.forEach(p=>{
+    const rank = PLAYERS.indexOf(p)+1;
+    const rd = roundOf(rank);
+    const tr = document.createElement('tr');
+    const status = draftState[p.name];
+    if(status==='mine') tr.className='row-mine';
+    else if(status==='taken') tr.className='row-taken';
+    const riskDot = p.risk ? `<span class="risk-dot risk-${p.risk}" title="${p.riskNote}"></span>` : '';
+    const consIcon = consIconHTML(p);
+    tr.innerHTML = `
+      <td class="rk tier-${p.tier}">${rank}</td>
+      <td><span class="rd-badge" style="background:${roundColor(rank)}">${rd}</span></td>
+      <td>${riskDot}</td>
+      <td>${consIcon}</td>
+      <td><div class="pname">${p.name}</div><div class="pteam">${p.team}</div></td>
+      <td>${p.currentStatus ? `<span class="status-tag ${p.currentStatus==='GTD'?'status-gtd':'status-inj'}" title="Marked ${p.currentStatus} on Sleeper as of Sept 14, 2026 \u2014 check current status before drafting.">${p.currentStatus}</span>` : ''}</td>
+      <td>${p.trajectory==='rising' ? `<span class="traj-chip traj-rising" title="${p.trajectoryNote}">RISING</span>` : p.trajectory==='declining' ? `<span class="traj-chip traj-declining" title="${p.trajectoryNote}">DECLINING</span>` : ''}</td>
+      <td><span class="pos-badge">${(p.positions||[p.pos]).join('/')}</span></td>
+      <td>${statusActionsHTML(p)}</td>
+      <td class="fp">${p.FP.toFixed(1)}${p.trend==='up' ? ' <span class="trend-up" title="'+ (p.note||'') +'">&#9650;</span>' : p.trend==='down' ? ' <span class="trend-down" title="'+ (p.note||'') +'">&#9660;</span>' : ''}</td>
+      <td>${p.PTS.toFixed(1)}</td>
+      <td>${p.TRB.toFixed(1)}</td>
+      <td>${p.AST.toFixed(1)}</td>
+      <td>${p.STL.toFixed(1)}</td>
+      <td>${p.BLK.toFixed(1)}</td>
+      <td>${p.TOV.toFixed(1)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+document.getElementById('board').addEventListener('click', (e)=>{
+  const el = e.target.closest('[data-action]');
+  if(!el) return;
+  const name = el.dataset.name;
+  const action = el.dataset.action;
+  if(action==='mine') setStatus(name,'mine');
+  else if(action==='taken') setStatus(name,'taken');
+  else if(action==='undo') setStatus(name,null);
+});
+
+document.getElementById('search').addEventListener('input', renderBoard);
+document.getElementById('posfilter').addEventListener('change', renderBoard);
+document.getElementById('roundfilter').addEventListener('change', renderBoard);
+document.getElementById('consfilter').addEventListener('change', renderBoard);
+document.getElementById('trajfilter').addEventListener('change', renderBoard);
+
+function initRoundFilter(){
+  const sel = document.getElementById('roundfilter');
+  const maxRound = roundOf(PLAYERS.length);
+  for(let r=1;r<=maxRound;r++){
+    const opt=document.createElement('option');
+    opt.value=r;
+    opt.textContent='Round '+r;
+    sel.appendChild(opt);
+  }
+}
+
+function renderPoolGrid(){
+  const grid = document.getElementById('poolgrid');
+  grid.innerHTML='';
+  const maxRound = roundOf(PLAYERS.length);
+  for(let r=1;r<=maxRound;r++){
+    const startIdx = (r-1)*N_TEAMS;
+    const endIdx = Math.min(PLAYERS.length, r*N_TEAMS);
+    const pool = PLAYERS.slice(startIdx, endIdx);
+    if(pool.length===0) continue;
+    const color = ROUND_COLORS[r-1];
+    const card = document.createElement('div');
+    card.className='pool-card';
+    const chips = pool.map(p=>{
+      const riskDot = p.risk?`<span class="risk-dot risk-${p.risk}" title="${p.riskNote}" style="margin-right:5px;position:relative;top:1px;"></span>`:'';
+      const consIcon = consIconHTML(p, 'margin-left:5px;');
+      const trajChip = p.trajectory==='rising' ? `<span class="traj-chip traj-rising" title="${p.trajectoryNote}" style="margin-left:5px;">R</span>`
+                      : p.trajectory==='declining' ? `<span class="traj-chip traj-declining" title="${p.trajectoryNote}" style="margin-left:5px;">D</span>` : '';
+      const status = draftState[p.name];
+      const stateClass = status==='taken' ? ' chip-taken' : status==='mine' ? ' chip-mine' : '';
+      return `<span class="pchip2${stateClass}" style="border-left-color:${color}" data-action="cycle" data-name="${p.name}">${riskDot}${p.name}<span class="pos">${(p.positions||[p.pos]).join('/')}</span>${consIcon}${trajChip}</span>`;
+    }).join('');
+    card.innerHTML = `
+      <div class="pool-head">
+        <span class="swatch" style="background:${color}"></span>
+        <span class="rname">Round ${r}</span>
+        <span class="rrange">picks ${startIdx+1}&ndash;${endIdx}</span>
+      </div>
+      <div class="pool-chips">${chips}</div>
+    `;
+    grid.appendChild(card);
+  }
+  const note = document.createElement('div');
+  note.style.cssText='color:var(--ink-dim);font-size:12.5px;padding:6px 2px;';
+  note.textContent = `Rounds ${maxRound+1}\u2013${N_ROUNDS} aren't covered by this board \u2014 that deep, treat it as best-athlete/best-fit off the wire.`;
+  grid.appendChild(note);
+}
+
+renderSlots();
+// ---- Draft tracking (mark taken / mark mine) + roster ----
+
+function computeRosterAssignment(){
+  const slots = ROSTER_SLOTS.map(s=>({type:s, player:null}));
+  const overflow = [];
+  myPicks.forEach(name=>{
+    const p = PLAYERS.find(pl=>pl.name===name);
+    if(!p) return;
+    const positions = p.positions || [p.pos];
+    let idx = -1;
+    // try an exact open slot for any of this player's eligible core positions, in listed order
+    for(const pos of positions){
+      idx = slots.findIndex(s=>s.type===pos && !s.player);
+      if(idx!==-1) break;
+    }
+    if(idx===-1 && positions.some(pos=>pos==='SF'||pos==='PF')){
+      idx = slots.findIndex(s=>s.type==='F' && !s.player);
+    }
+    if(idx===-1){
+      idx = slots.findIndex(s=>s.type==='FLEX' && !s.player);
+    }
+    if(idx===-1){
+      idx = slots.findIndex(s=>s.type==='BN' && !s.player);
+    }
+    if(idx!==-1) slots[idx].player = name;
+    else overflow.push(name);
+  });
+  return {slots, overflow};
+}
+
+function renderRoster(){
+  const grid = document.getElementById('rostergrid');
+  grid.innerHTML='';
+  const {slots, overflow} = computeRosterAssignment();
+  slots.forEach(s=>{
+    const div = document.createElement('div');
+    div.className = 'roster-slot' + (s.player ? '' : ' empty');
+    div.innerHTML = `<div class="stype">${s.type}</div><div class="sname">${s.player ? s.player : 'empty'}${s.player ? ` <span class="sundo" data-action="undo" data-name="${s.player}">remove</span>`:''}</div>`;
+    grid.appendChild(div);
+  });
+  overflow.forEach(name=>{
+    const div = document.createElement('div');
+    div.className = 'roster-slot';
+    div.style.borderColor = 'var(--red)';
+    div.innerHTML = `<div class="stype" style="color:var(--red)">OVERFLOW</div><div class="sname">${name} <span class="sundo" data-action="undo" data-name="${name}">remove</span></div>`;
+    grid.appendChild(div);
+  });
+}
+
+function setStatus(name, status){
+  if(status===null){
+    delete draftState[name];
+    myPicks = myPicks.filter(n=>n!==name);
+  } else {
+    draftState[name] = status;
+    myPicks = myPicks.filter(n=>n!==name);
+    if(status==='mine') myPicks.push(name);
+  }
+  saveDraftState();
+  renderBoard();
+  renderPoolGrid();
+  renderRoster();
+  renderPicks();
+}
+
+async function saveDraftState(){
+  try{
+    await window.storage.set('draft_state_v1', JSON.stringify({draftState, myPicks}), false);
+  }catch(e){ console.error('save failed', e); }
+}
+
+async function loadDraftState(){
+  try{
+    const res = await window.storage.get('draft_state_v1', false);
+    if(res && res.value){
+      const parsed = JSON.parse(res.value);
+      draftState = parsed.draftState || {};
+      myPicks = parsed.myPicks || [];
+    }
+  }catch(e){
+    draftState = {};
+    myPicks = [];
+  }
+}
+
+document.getElementById('rostergrid').addEventListener('click',(e)=>{
+  const el = e.target.closest('[data-action="undo"]');
+  if(!el) return;
+  setStatus(el.dataset.name, null);
+});
+
+document.getElementById('poolgrid').addEventListener('click',(e)=>{
+  const el = e.target.closest('[data-action="cycle"]');
+  if(!el) return;
+  const name = el.dataset.name;
+  const cur = draftState[name];
+  if(!cur) setStatus(name,'taken');
+  else if(cur==='taken') setStatus(name,'mine');
+  else setStatus(name,null);
+});
+
+document.getElementById('resetDraft').addEventListener('click',()=>{
+  if(!confirm('Clear all draft picks (mine + taken)? This cannot be undone.')) return;
+  draftState = {};
+  myPicks = [];
+  saveDraftState();
+  renderBoard();
+  renderPoolGrid();
+  renderRoster();
+  renderPicks();
+});
+
+(async function init(){
+  await loadPlayers();
+  await loadDraftState();
+  initRoundFilter();
+  renderBoard();
+  renderPoolGrid();
+  renderRoster();
+  renderPicks();
+})();
+</script>
+</body>
+</html>
